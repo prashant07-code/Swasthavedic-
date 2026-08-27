@@ -1,0 +1,6 @@
+{
+  "name": "SwasthaVedic AI",
+  "description": "AI-powered patient clinical history collection, medical document OCR digitization, triage red-flag detection, and doctor consultation platform for OPDs with AYUSH & modern medicine support.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
