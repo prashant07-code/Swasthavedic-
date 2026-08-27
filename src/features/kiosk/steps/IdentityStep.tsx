@@ -16,9 +16,14 @@ import {
   ArrowLeft,
   AlertCircle,
   CheckCircle,
+  FileText,
 } from 'lucide-react';
 
-export const IdentityStep: React.FC = () => {
+interface IdentityStepProps {
+  onOpenReports?: (tokenOrMobile?: string) => void;
+}
+
+export const IdentityStep: React.FC<IdentityStepProps> = ({ onOpenReports }) => {
   const { goToStep, setPatient, setSession, updateClinicalHistory } = useKiosk();
   const { language, mode, audioSpeed } = useAccessibility();
   const { speak } = useVoice({ language, speechRate: audioSpeed });
@@ -110,14 +115,14 @@ export const IdentityStep: React.FC = () => {
               : 'bg-white border-slate-200 hover:border-emerald-300 hover:shadow-lg'
           }`}
         >
-          <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mb-4 shadow-xs">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center mb-4">
             <UserCheck className="w-8 h-8" />
           </div>
-          <h4 className="font-black text-xl text-sky-950 mb-1">
-            {language === 'hi' ? 'पुराना मरीज़' : 'Returning Patient'}
-          </h4>
-          <p className="text-xs text-slate-600 font-semibold">
-            {language === 'hi' ? 'पहले आ चुका हूँ (मोबाइल नंबर द्वारा)' : 'Previously registered with mobile number'}
+          <h3 className="text-xl font-black text-slate-900 mb-1">{t('existingPatient', language)}</h3>
+          <p className="text-xs text-slate-600 font-medium leading-relaxed">
+            {language === 'hi'
+              ? 'पहले से अस्पताल का पर्चा या मोबाइल नंबर दर्ज है।'
+              : 'Returning visitor with previous hospital registration.'}
           </p>
         </button>
 
@@ -130,14 +135,14 @@ export const IdentityStep: React.FC = () => {
               : 'bg-white border-slate-200 hover:border-sky-300 hover:shadow-lg'
           }`}
         >
-          <div className="w-14 h-14 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center mb-4 shadow-xs">
+          <div className="w-14 h-14 rounded-2xl bg-sky-100 text-sky-800 flex items-center justify-center mb-4">
             <UserPlus className="w-8 h-8" />
           </div>
-          <h4 className="font-black text-xl text-sky-950 mb-1">
-            {language === 'hi' ? 'नया पंजीकरण' : 'New Registration'}
-          </h4>
-          <p className="text-xs text-slate-600 font-semibold">
-            {language === 'hi' ? 'पहली बार अस्पताल आया हूँ' : 'First-time hospital visit check-in'}
+          <h3 className="text-xl font-black text-slate-900 mb-1">{t('newPatient', language)}</h3>
+          <p className="text-xs text-slate-600 font-medium leading-relaxed">
+            {language === 'hi'
+              ? 'पहली बार ओपीडी में आ रहे हैं, नया पंजीकरण करना है।'
+              : 'First-time hospital visitor creating a fresh clinical record.'}
           </p>
         </button>
 
@@ -150,14 +155,14 @@ export const IdentityStep: React.FC = () => {
               : 'bg-white border-slate-200 hover:border-amber-300 hover:shadow-lg'
           }`}
         >
-          <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mb-4 shadow-xs">
+          <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center mb-4">
             <CreditCard className="w-8 h-8" />
           </div>
-          <h4 className="font-black text-xl text-sky-950 mb-1">
-            {language === 'hi' ? 'आयुष्मान (ABHA)' : 'ABHA / ABDM ID'}
-          </h4>
-          <p className="text-xs text-slate-600 font-semibold">
-            {language === 'hi' ? '14 अंकों का आभा नंबर' : 'National Digital Health ID ready'}
+          <h3 className="text-xl font-black text-slate-900 mb-1">{t('abhaScan', language)}</h3>
+          <p className="text-xs text-slate-600 font-medium leading-relaxed">
+            {language === 'hi'
+              ? 'आयुष्मान भारत स्वास्थ्य खाता (ABHA QR / 14 अंक) से त्वरित लॉगिन।'
+              : 'Instant ABDM check-in via 14-digit ABHA ID or QR.'}
           </p>
         </button>
       </div>
@@ -165,64 +170,76 @@ export const IdentityStep: React.FC = () => {
       {/* Existing Patient Search Form */}
       {patientType === 'EXISTING' && (
         <div className="bg-white p-8 rounded-[32px] border-4 border-emerald-100 shadow-xl max-w-xl mx-auto mb-8">
-          <div className="mb-5">
-            <label className="block text-xs font-black uppercase tracking-wider text-sky-950 mb-2">
-              {t('mobileLabel', language)}
-            </label>
-            <div className="relative">
-              <Phone className="w-5 h-5 text-slate-400 absolute left-4 top-4" />
-              <input
-                id="existing-mobile-input"
-                type="tel"
-                maxLength={10}
-                value={mobile}
-                onChange={(e) => setMobile(e.target.value)}
-                placeholder="9876543210"
-                className="w-full pl-12 pr-4 py-3.5 text-lg font-black bg-sky-50/50 border-2 border-slate-200 rounded-2xl tracking-wider text-slate-900 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 outline-hidden"
-              />
-            </div>
-            <p className="text-xs text-slate-500 mt-2 font-medium">
-              (सुझाव: परीक्षण के लिए <span className="font-black text-emerald-700">9876543210</span> श्रीमती शांति देवी दर्ज है)
-            </p>
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+            <Search className="w-6 h-6 text-emerald-600" />
+            <h3 className="text-xl font-black text-slate-900">
+              {language === 'hi' ? 'पुराना रिकॉर्ड खोजें' : 'Locate Existing Patient Profile'}
+            </h3>
           </div>
 
-          <div className="mb-6">
-            <label className="block text-xs font-black uppercase tracking-wider text-sky-950 mb-2">
-              {t('otpLabel', language)}
-            </label>
-            <div className="relative">
-              <KeyRound className="w-5 h-5 text-slate-400 absolute left-4 top-4" />
+          <div className="space-y-4 mb-6 text-left">
+            <div>
+              <label className="block text-xs font-black text-slate-700 mb-1.5 uppercase">
+                {language === 'hi' ? '10 अंकों का मोबाइल नंबर' : '10-Digit Mobile Number'}
+              </label>
+              <div className="relative">
+                <Phone className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                <input
+                  id="identity-mobile-input"
+                  type="tel"
+                  maxLength={10}
+                  value={mobile}
+                  onChange={(e) => setMobile(e.target.value)}
+                  placeholder="e.g. 9876543210"
+                  className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-2xl text-base font-bold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-hidden"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-black text-slate-700 mb-1.5 uppercase">
+                {language === 'hi' ? 'या अस्पताल कोड (वैकल्पिक)' : 'Or Patient Code (Optional)'}
+              </label>
               <input
-                id="existing-otp-input"
-                type="password"
-                maxLength={4}
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                placeholder="1234"
-                className="w-full pl-12 pr-4 py-3.5 text-lg font-black bg-sky-50/50 border-2 border-slate-200 rounded-2xl tracking-widest text-slate-900 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 outline-hidden"
+                id="identity-code-input"
+                type="text"
+                value={patientCode}
+                onChange={(e) => setPatientCode(e.target.value)}
+                placeholder="e.g. SV-2026-1081"
+                className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-2xl text-base font-bold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-hidden uppercase font-mono"
               />
             </div>
-            <p className="text-xs text-slate-500 mt-2 font-medium">
-              (सुरक्षा के लिए डेमो पिन: 1234)
-            </p>
           </div>
 
           {error && (
-            <div className="p-4 mb-5 rounded-2xl bg-red-50 border-2 border-red-300 text-red-700 text-xs font-bold flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+            <div className="p-4 mb-6 rounded-2xl bg-rose-50 border-2 border-rose-200 text-rose-900 flex items-center gap-3 text-xs font-bold">
+              <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
-          <button
-            id="identity-verify-btn"
-            onClick={handleExistingSearch}
-            disabled={isSearching || mobile.length < 10}
-            className="w-full py-4 px-6 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-lg shadow-xl flex items-center justify-center gap-2.5 disabled:opacity-50 active:scale-98 cursor-pointer border-b-4 border-emerald-700 transition-all"
-          >
-            <Search className="w-5 h-5" />
-            <span>{isSearching ? 'पहचान सत्यापित हो रही है...' : 'रिकॉर्ड खोजें व जारी रखें'}</span>
-          </button>
+          <div className="space-y-3">
+            <button
+              id="identity-search-btn"
+              onClick={handleExistingSearch}
+              disabled={isSearching}
+              className="w-full py-4 px-6 rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-98 text-white font-black text-lg shadow-xl flex items-center justify-center gap-2.5 cursor-pointer border-b-4 border-emerald-700 transition-all"
+            >
+              <Search className="w-5 h-5" />
+              <span>{isSearching ? 'खोज रहे हैं...' : language === 'hi' ? 'रिकॉर्ड खोजें' : 'Search Record'}</span>
+            </button>
+
+            {onOpenReports && (
+              <button
+                type="button"
+                onClick={() => onOpenReports(mobile)}
+                className="w-full py-3 px-4 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-950 font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all border border-sky-200"
+              >
+                <FileText className="w-4 h-4 text-sky-600" />
+                <span>{language === 'hi' ? 'सीधे डॉक्टर पर्ची / रिपोर्ट देखें (View Prescriptions)' : 'Directly View Past Prescriptions'}</span>
+              </button>
+            )}
+          </div>
         </div>
       )}
 

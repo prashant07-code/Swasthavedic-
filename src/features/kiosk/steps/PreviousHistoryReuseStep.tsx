@@ -3,9 +3,13 @@ import { useKiosk } from '../../../context/KioskContext';
 import { useAccessibility } from '../../../context/AccessibilityContext';
 import { useVoice } from '../../../hooks/useVoice';
 import { t } from '../../../constants/languages';
-import { History, CheckCircle, RefreshCw, AlertTriangle, ArrowRight, ArrowLeft, Pill, Activity } from 'lucide-react';
+import { History, CheckCircle, RefreshCw, AlertTriangle, ArrowRight, ArrowLeft, Pill, Activity, FileText } from 'lucide-react';
 
-export const PreviousHistoryReuseStep: React.FC = () => {
+interface PreviousHistoryReuseStepProps {
+  onOpenReports?: (tokenOrMobile?: string) => void;
+}
+
+export const PreviousHistoryReuseStep: React.FC<PreviousHistoryReuseStepProps> = ({ onOpenReports }) => {
   const { goToStep, clinicalHistory, updateClinicalHistory, patient } = useKiosk();
   const { language, audioSpeed } = useAccessibility();
   const { speak } = useVoice({ language, speechRate: audioSpeed });
@@ -60,43 +64,78 @@ export const PreviousHistoryReuseStep: React.FC = () => {
 
       {/* Snapshot of recorded previous history */}
       <div className="bg-white p-7 rounded-[32px] border-4 border-emerald-100 shadow-xl mb-8 text-left">
-        <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 mb-4 flex items-center gap-2">
-          <Activity className="w-5 h-5 text-emerald-600" />
-          {language === 'hi' ? 'अस्पताल रिकॉर्ड में दर्ज पुरानी बीमारियां व दवाएं:' : 'Pre-Existing Conditions in Records:'}
-        </h4>
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 flex items-center gap-2">
+            <Activity className="w-5 h-5 text-emerald-600" />
+            {language === 'hi' ? 'अस्पताल रिकॉर्ड में दर्ज पुरानी बीमारियां व दवाएं:' : 'Pre-Existing Conditions in Records:'}
+          </h4>
+
+          {onOpenReports && (
+            <button
+              type="button"
+              onClick={() => onOpenReports(patient?.mobile || patient?.patientCode)}
+              className="text-xs text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200 px-3 py-1 rounded-xl font-bold flex items-center gap-1.5 cursor-pointer transition-all"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>{language === 'hi' ? 'पिछली पर्ची देखें' : 'View Past Prescriptions'}</span>
+            </button>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <div className="p-4 bg-sky-50/60 rounded-2xl border-2 border-sky-100">
             <span className="text-xs font-black text-slate-500 uppercase block mb-1">
-              {language === 'hi' ? 'पुरानी बीमारियां (Chronic Illness):' : 'Chronic Conditions:'}
+              {language === 'hi' ? 'पुरानी बीमारियां' : 'Chronic Conditions'}
             </span>
-            <p className="font-black text-base text-sky-950">
-              {pastConditions.length > 0 ? pastConditions.join(', ') : 'None documented'}
-            </p>
-          </div>
-
-          <div className="p-4 bg-rose-50/60 rounded-2xl border-2 border-rose-100">
-            <span className="text-xs font-black text-rose-600 uppercase block mb-1">
-              {language === 'hi' ? 'दवा एलर्जी (Allergies):' : 'Known Drug Allergies:'}
-            </span>
-            <p className="font-black text-base text-rose-700">
-              {allergies.length > 0 ? allergies.join(', ') : 'No known drug allergies (NKDA)'}
-            </p>
-          </div>
-
-          <div className="p-4 bg-emerald-50/60 rounded-2xl border-2 border-emerald-100 sm:col-span-2">
-            <span className="text-xs font-black text-emerald-800 uppercase block mb-1 flex items-center gap-1.5">
-              <Pill className="w-4 h-4 text-emerald-600" />
-              {language === 'hi' ? 'नियमित चलने वाली दवाएं (Active Medications):' : 'Current Medications:'}
-            </span>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {medications.length > 0 ? (
-                medications.map((m, idx) => (
+            <div className="flex flex-wrap gap-1.5">
+              {pastConditions.length > 0 ? (
+                pastConditions.map((cond, idx) => (
                   <span
                     key={idx}
-                    className="text-xs bg-emerald-100 text-emerald-900 border border-emerald-300 px-3 py-1.5 rounded-xl font-bold"
+                    className="bg-emerald-100 text-emerald-950 font-bold px-2.5 py-1 rounded-lg text-xs"
                   >
-                    {m.name} {m.dosage ? `(${m.dosage})` : ''}
+                    {cond}
+                  </span>
+                ))
+              ) : (
+                <span className="text-xs text-slate-500 font-medium">कोई पुरानी बीमारी दर्ज नहीं</span>
+              )}
+            </div>
+          </div>
+
+          <div className="p-4 bg-sky-50/60 rounded-2xl border-2 border-sky-100">
+            <span className="text-xs font-black text-slate-500 uppercase block mb-1">
+              {language === 'hi' ? 'एलर्जी (Allergies)' : 'Allergies'}
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {allergies.length > 0 ? (
+                allergies.map((all, idx) => (
+                  <span
+                    key={idx}
+                    className="bg-rose-100 text-rose-950 font-bold px-2.5 py-1 rounded-lg text-xs"
+                  >
+                    {all}
+                  </span>
+                ))
+              ) : (
+                <span className="text-xs text-slate-500 font-medium">कोई एलर्जी नहीं (NKDA)</span>
+              )}
+            </div>
+          </div>
+
+          <div className="col-span-1 sm:col-span-2 p-4 bg-sky-50/60 rounded-2xl border-2 border-sky-100">
+            <span className="text-xs font-black text-slate-500 uppercase block mb-1.5">
+              {language === 'hi' ? 'पहले से चल रही दवाएं' : 'Ongoing Prescriptions'}
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {medications.length > 0 ? (
+                medications.map((med, idx) => (
+                  <span
+                    key={idx}
+                    className="bg-white border border-sky-200 text-slate-900 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow-2xs"
+                  >
+                    <Pill className="w-3.5 h-3.5 text-sky-600" />
+                    {med.name} ({med.frequency || 'Regular'})
                   </span>
                 ))
               ) : (

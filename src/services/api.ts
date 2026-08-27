@@ -158,6 +158,41 @@ export const apiService = {
     return res.json();
   },
 
+  // Get Consultations for a Patient
+  getPatientConsultations: async (patientId: string): Promise<{ consultations: ConsultationRecord[] }> => {
+    const res = await fetch(`${API_BASE}/consultations/by-patient/${patientId}`);
+    return res.json();
+  },
+
+  // Get Consultation by Visit ID
+  getConsultationByVisit: async (visitId: string): Promise<{ found: boolean; consultation?: ConsultationRecord }> => {
+    const res = await fetch(`${API_BASE}/consultations/by-visit/${visitId}`);
+    return res.json();
+  },
+
+  // Search Patient Reports / Prescriptions
+  searchPatientReports: async (params: {
+    query?: string;
+    mobile?: string;
+    tokenNumber?: string;
+    patientCode?: string;
+    abhaId?: string;
+  }): Promise<{
+    found: boolean;
+    patient?: Patient;
+    queueItem?: any;
+    reports?: ConsultationRecord[];
+    latestReport?: ConsultationRecord;
+    message?: string;
+  }> => {
+    const res = await fetch(`${API_BASE}/patients/reports/search`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    });
+    return res.json();
+  },
+
   // AI Assistance: Generate Clinical Summary & differential guidance
   generateAiClinicalSummary: async (payload: {
     chiefComplaints: any;

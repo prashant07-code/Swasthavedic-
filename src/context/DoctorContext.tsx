@@ -11,6 +11,7 @@ import {
   DoctorUser,
 } from '../types';
 import { apiService } from '../services/api';
+import { AUTHORIZED_DOCTORS, AuthorizedDoctor } from '../data/doctors';
 
 interface QueueItem {
   tokenNumber: string;
@@ -26,7 +27,11 @@ interface QueueItem {
 }
 
 interface DoctorContextType {
-  currentDoctor: DoctorUser;
+  currentDoctor: AuthorizedDoctor | null;
+  isAuthenticated: boolean;
+  loginDoctor: (doctorIdOrEmail: string, passwordOrPin: string) => { success: boolean; message?: string };
+  logoutDoctor: () => void;
+  switchDoctor: (doctor: AuthorizedDoctor) => void;
   queue: QueueItem[];
   refreshQueue: () => Promise<void>;
   activeVisitId: string | null;
@@ -68,17 +73,6 @@ interface DoctorContextType {
   setFinalizedRecordToPrint: (rec: ConsultationRecord | null) => void;
 }
 
-const DEFAULT_DOCTOR: DoctorUser = {
-  id: 'doc-1',
-  doctorId: 'DOC-AIIMS-409',
-  name: 'Dr. Rajesh Sharma, MD (Medicine)',
-  specialization: 'Internal Medicine & Integrative AYUSH Health',
-  department: 'General OPD Room 04',
-  email: 'dr.sharma@hospital.gov.in',
-  role: 'DOCTOR',
-  tokenCountToday: 24,
-};
-
 const INITIAL_AYUSH_ASSESSMENT: AyushClinicalAssessment = {
   doshaImbalance: {
     vata: 'Normal',
@@ -95,7 +89,83 @@ const INITIAL_AYUSH_ASSESSMENT: AyushClinicalAssessment = {
 const DoctorContext = createContext<DoctorContextType | undefined>(undefined);
 
 export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentDoctor] = useState<DoctorUser>(DEFAULT_DOCTOR);
+  const [currentDoctor, setCurrentDoctor] = useState<AuthorizedDoctor | null>(() => {
+    try {
+      const saved = localStorage.getItem('swasthavedic_doctor_session');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const match = AUTHORIZED_DOCTORS.find((d) => d.doctorId === parsed.doctorId || d.id === parsed.id);
+        return match || AUTHORIZED_DOCTORS[0];
+      }
+    } catch (e) {
+      console.warn('Could not restore doctor session', e);
+    }
+    return null; // Start on login page when first visiting
+  });
+
+  const isAuthenticated = !!currentDoctor;
+
+  const loginDoctor = (doctorIdOrEmail: string, passwordOrPin: string): { success: boolean; message?: string } => {
+    const term = doctorIdOrEmail.trim().toLowerCase();
+    const cred = passwordOrPin.trim();
+
+    const found = AUTHORIZED_DOCTORS.find(
+      (doc) =>
+        doc.doctorId.toLowerCase() === term ||
+        doc.email.toLowerCase() === term ||
+        doc.name.toLowerCase().includes(term)
+    );
+
+    if (!found) {
+      return {
+        success: false,
+        message: 'Doctor ID or Registered Hospital Email not found. Please check your credentials.',
+      };
+    }
+
+    // Verify password or PIN or allow standard demo quick login
+    if (
+      cred === found.password ||
+      cred === found.pin ||
+      cred === 'doc123' ||
+      cred === 'admin123' ||
+      cred === 'hospital123'
+    ) {
+      setCurrentDoctor(found);
+      try {
+        localStorage.setItem('swasthavedic_doctor_session', JSON.stringify({ id: found.id, doctorId: found.doctorId }));
+      } catch (e) {
+        console.warn(e);
+      }
+      return { success: true };
+    }
+
+    return {
+      success: false,
+      message: 'Invalid password or security PIN. Please enter the authorized PIN (e.g. 4090) or password.',
+    };
+  };
+
+  const logoutDoctor = () => {
+    setCurrentDoctor(null);
+    try {
+      localStorage.removeItem('swasthavedic_doctor_session');
+    } catch (e) {
+      console.warn(e);
+    }
+    setActiveVisitId(null);
+    setActivePatientBundle(null);
+  };
+
+  const switchDoctor = (doc: AuthorizedDoctor) => {
+    setCurrentDoctor(doc);
+    try {
+      localStorage.setItem('swasthavedic_doctor_session', JSON.stringify({ id: doc.id, doctorId: doc.doctorId }));
+    } catch (e) {
+      console.warn(e);
+    }
+  };
+
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [activeVisitId, setActiveVisitId] = useState<string | null>(null);
   const [activePatientBundle, setActivePatientBundle] = useState<any | null>(null);
@@ -210,9 +280,9 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const payload: Partial<ConsultationRecord> = {
         visitId: activeVisitId,
         patientId: activePatientBundle.patient.id,
-        doctorId: currentDoctor.doctorId,
-        doctorName: currentDoctor.name,
-        department: currentDoctor.department,
+        doctorId: currentDoctor?.doctorId || 'DOC-AIIMS-409',
+        doctorName: currentDoctor?.name || 'Dr. Rajesh Sharma, MD',
+        department: currentDoctor?.department || 'General OPD Room 04',
         provisionalDiagnosis,
         finalDiagnosis: finalDiagnosis || provisionalDiagnosis,
         systemicExamination,
@@ -250,6 +320,10 @@ export const DoctorProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     <DoctorContext.Provider
       value={{
         currentDoctor,
+        isAuthenticated,
+        loginDoctor,
+        logoutDoctor,
+        switchDoctor,
         queue,
         refreshQueue,
         activeVisitId,

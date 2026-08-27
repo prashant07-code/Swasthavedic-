@@ -316,6 +316,109 @@ export class InMemoryHospitalDatabase {
       },
     ];
 
+    // Seed a finalized consultation record for Patient 1 (Smt. Shanti Devi)
+    this.consultations.set('visit-prev-101', {
+      id: 'cons-prev-101',
+      visitId: 'visit-prev-101',
+      patientId: p1.id,
+      doctorId: 'DOC-AIIMS-409',
+      doctorName: 'Dr. Rajesh Sharma, MD (Medicine)',
+      department: 'General OPD Room 04',
+      consultationDate: '2026-08-20T10:30:00.000Z',
+      symptomsSummary: 'Bilateral Knee Osteoarthritic pain with morning stiffness and type-2 diabetes mellitus.',
+      provisionalDiagnosis: 'Bilateral Knee Osteoarthritis (Janu Sandhigata Vata) + Controlled T2DM',
+      finalDiagnosis: 'Bilateral Knee Osteoarthritis with Type 2 Diabetes Mellitus & Essential Hypertension',
+      icdCode: 'M17.0 / E11.9',
+      systemicExamination: 'BP: 134/82 mmHg, Pulse: 76/min, Knee Joint: Mild crepitus, no acute effusion, Range of Motion preserved.',
+      ayushAssessment: {
+        doshaImbalance: {
+          vata: 'Aggravated',
+          pitta: 'Normal',
+          kapha: 'Mild Aggravation',
+        },
+        nadiParikshaNotes: 'Vata-Kapha Mandagati nadi, Janu Sandhigata Vata lakshana.',
+        dhatuInvolved: ['Asthi', 'Majja', 'Medas'],
+        pathyaAdvice: [
+          'Warm freshly cooked light food with cow ghee',
+          'Regular gentle quadriceps exercises and morning sun exposure (Vitamin D)',
+          'Drink warm water throughout the day',
+        ],
+        apathyaAdvice: [
+          'Avoid cold, dry, stale and refrigerated foods',
+          'Avoid excessive sour, fermented curd, and refined sugar',
+          'Avoid prolonged sitting on floor or squatting',
+        ],
+      },
+      prescriptions: [
+        {
+          id: 'rx-1',
+          medicineName: 'Yograj Guggulu',
+          form: 'Tablet',
+          system: 'AYURVEDA',
+          dosage: '2 Tablets (500mg)',
+          frequency: '1-0-1',
+          timing: 'AFTER_FOOD',
+          duration: '30 Days',
+          instructions: 'Take with warm water after breakfast and dinner.',
+        },
+        {
+          id: 'rx-2',
+          medicineName: 'Shallaki (Boswellia serrata) 500mg',
+          form: 'Capsule',
+          system: 'AYURVEDA',
+          dosage: '1 Capsule',
+          frequency: '1-0-1',
+          timing: 'AFTER_FOOD',
+          duration: '30 Days',
+          instructions: 'For cartilage preservation and inflammation relief.',
+        },
+        {
+          id: 'rx-3',
+          medicineName: 'Tab Metformin 500mg (Sustained Release)',
+          form: 'Tablet',
+          system: 'ALLOPATHY',
+          dosage: '500mg',
+          frequency: '1-0-1',
+          timing: 'AFTER_FOOD',
+          duration: '30 Days',
+          instructions: 'Continue regular diabetic oral medication.',
+        },
+        {
+          id: 'rx-4',
+          medicineName: 'Tab Telmisartan 40mg',
+          form: 'Tablet',
+          system: 'ALLOPATHY',
+          dosage: '40mg',
+          frequency: '1-0-0',
+          timing: 'BEFORE_FOOD',
+          duration: '30 Days',
+          instructions: 'Morning after waking up with water.',
+        },
+      ],
+      investigations: [
+        {
+          id: 'inv-1',
+          testName: 'Fasting Blood Glucose & HbA1c',
+          category: 'BIOCHEMISTRY',
+          urgency: 'ROUTINE',
+          instructions: '10-12 hours overnight fasting required.',
+        },
+        {
+          id: 'inv-2',
+          testName: 'Digital X-Ray Both Knees (AP & Lateral Standing)',
+          category: 'RADIOLOGY',
+          urgency: 'ROUTINE',
+          instructions: 'Evaluate joint space narrowing.',
+        },
+      ],
+      generalAdvice: 'Maintain healthy glycemic control. Avoid high impact knee stress. Continue prescribed Ayush joint regimen.',
+      followUpDays: 15,
+      followUpDate: '04 Sep 2026',
+      isEmergencyReferral: false,
+      status: 'FINALIZED',
+      finalizedAt: '2026-08-20T10:45:00.000Z',
+    });
+
     // Seed Staff Assistance Requests
     this.assistanceRequests = [
       {

@@ -377,6 +377,85 @@ async function startServer() {
     res.json({ success: true, consultation });
   });
 
+  // Get Consultations for a Patient
+  app.get('/api/consultations/by-patient/:patientId', (req, res) => {
+    const { patientId } = req.params;
+    const patientConsultations = Array.from(db.consultations.values()).filter(
+      (c) => c.patientId === patientId
+    );
+    res.json({ consultations: patientConsultations });
+  });
+
+  // Get Consultation by Visit ID
+  app.get('/api/consultations/by-visit/:visitId', (req, res) => {
+    const { visitId } = req.params;
+    const consultation = db.consultations.get(visitId);
+    res.json({ found: !!consultation, consultation });
+  });
+
+  // Search Patient Reports / Prescriptions for Patient Portal / Kiosk
+  app.post('/api/patients/reports/search', (req, res) => {
+    const { query, mobile, tokenNumber, patientCode, abhaId } = req.body;
+    const cleanQuery = (query || '').trim().toUpperCase();
+
+    // 1. Search patient matching query
+    let matchedPatient: Patient | undefined;
+    for (const p of db.patients.values()) {
+      if (
+        (mobile && p.mobile === mobile.trim()) ||
+        (tokenNumber && db.queue.some((q) => q.patientId === p.id && q.tokenNumber.toUpperCase() === tokenNumber.trim().toUpperCase())) ||
+        (patientCode && p.patientCode.toUpperCase() === patientCode.trim().toUpperCase()) ||
+        (abhaId && p.abhaId === abhaId.trim()) ||
+        (cleanQuery && (
+          p.mobile.includes(cleanQuery) ||
+          p.patientCode.toUpperCase().includes(cleanQuery) ||
+          p.name.toUpperCase().includes(cleanQuery) ||
+          (p.abhaId && p.abhaId.includes(cleanQuery))
+        ))
+      ) {
+        matchedPatient = p;
+        break;
+      }
+    }
+
+    // 2. Also check if query is a Token Number (e.g. #OPD-101 or 101)
+    let matchedQueueItem = undefined;
+    if (cleanQuery || tokenNumber) {
+      const tokenSearch = (tokenNumber || cleanQuery).replace('#', '').trim();
+      matchedQueueItem = db.queue.find(
+        (q) =>
+          q.tokenNumber.toUpperCase().includes(tokenSearch) ||
+          q.visitId.toUpperCase().includes(cleanQuery)
+      );
+      if (matchedQueueItem && !matchedPatient) {
+        matchedPatient = db.patients.get(matchedQueueItem.patientId);
+      }
+    }
+
+    if (!matchedPatient && !matchedQueueItem) {
+      return res.json({
+        found: false,
+        message: 'No patient record or consultation found for the given search criteria.',
+      });
+    }
+
+    const patientId = matchedPatient ? matchedPatient.id : matchedQueueItem?.patientId;
+    const patientReports = Array.from(db.consultations.values()).filter(
+      (c) => c.patientId === patientId || (matchedQueueItem && c.visitId === matchedQueueItem.visitId)
+    );
+
+    // Active queue status
+    const queueStatus = matchedQueueItem || db.queue.find((q) => q.patientId === patientId);
+
+    res.json({
+      found: true,
+      patient: matchedPatient,
+      queueItem: queueStatus,
+      reports: patientReports,
+      latestReport: patientReports.length > 0 ? patientReports[patientReports.length - 1] : null,
+    });
+  });
+
   // AI Clinical Summary Endpoint
   app.post('/api/ai/clinical-summary', async (req, res) => {
     try {

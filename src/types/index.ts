@@ -1,5 +1,7 @@
 export type LanguageCode = 'hi' | 'en' | 'aw' | 'bho' | 'mai';
 
+export type AppView = 'KIOSK' | 'DOCTOR' | 'STAFF';
+
 export type AccessibilityMode = 'NORMAL' | 'VOICE_FIRST' | 'ELDERLY' | 'LOW_LITERACY' | 'ASSISTED';
 
 export type Gender = 'MALE' | 'FEMALE' | 'OTHER';

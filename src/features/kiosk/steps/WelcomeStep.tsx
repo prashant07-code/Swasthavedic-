@@ -3,9 +3,13 @@ import { useKiosk } from '../../../context/KioskContext';
 import { useAccessibility } from '../../../context/AccessibilityContext';
 import { useVoice } from '../../../hooks/useVoice';
 import { t } from '../../../constants/languages';
-import { Play, Volume2, ShieldCheck, Heart, Sparkles, CheckCircle2, UserCheck } from 'lucide-react';
+import { Play, Volume2, ShieldCheck, FileText, Sparkles, CheckCircle2, UserCheck } from 'lucide-react';
 
-export const WelcomeStep: React.FC = () => {
+interface WelcomeStepProps {
+  onOpenReports?: () => void;
+}
+
+export const WelcomeStep: React.FC<WelcomeStepProps> = ({ onOpenReports }) => {
   const { goToStep } = useKiosk();
   const { language, mode, setMode, audioSpeed } = useAccessibility();
   const { speak, isSpeaking } = useVoice({ language, speechRate: audioSpeed });
@@ -50,21 +54,29 @@ export const WelcomeStep: React.FC = () => {
         </button>
       </div>
 
-      {/* Main Big CTA Button */}
-      <div className="mb-10">
+      {/* Primary & Secondary Action CTAs */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-xl mx-auto mb-10">
+        {/* Main Start Check-In Button */}
         <button
           id="welcome-start-btn"
           onClick={() => goToStep('LANGUAGE')}
-          className="w-full max-w-md mx-auto py-5 px-8 rounded-3xl bg-emerald-500 hover:bg-emerald-600 active:scale-98 text-white text-xl sm:text-2xl font-black shadow-xl flex items-center justify-center gap-3 border-b-4 border-emerald-700 transition-all cursor-pointer"
+          className="w-full py-5 px-8 rounded-3xl bg-emerald-500 hover:bg-emerald-600 active:scale-98 text-white text-lg sm:text-xl font-black shadow-xl flex items-center justify-center gap-3 border-b-4 border-emerald-700 transition-all cursor-pointer"
         >
-          <Play className="w-7 h-7 fill-white" />
+          <Play className="w-6 h-6 fill-white" />
           <span>{t('startKiosk', language)}</span>
         </button>
-        <p className="text-xs text-slate-500 font-bold mt-3">
-          {language === 'hi'
-            ? 'बोलकर या छूकर आसान 2 मिनट में पर्ची बनाएं'
-            : 'Quick 2-minute voice/touch check-in before consulting doctor'}
-        </p>
+
+        {/* View Doctor Prescriptions / Reports Button */}
+        {onOpenReports && (
+          <button
+            id="welcome-view-reports-btn"
+            onClick={onOpenReports}
+            className="w-full py-5 px-6 rounded-3xl bg-white hover:bg-sky-50 active:scale-98 text-sky-950 text-base sm:text-lg font-black shadow-lg border-2 border-sky-200 flex items-center justify-center gap-2.5 transition-all cursor-pointer"
+          >
+            <FileText className="w-5 h-5 text-sky-600" />
+            <span>{language === 'hi' ? 'मेरी डॉक्टर रिपोर्ट / पर्ची देखें' : 'View My Finalized Report'}</span>
+          </button>
+        )}
       </div>
 
       {/* Feature Highlights for Patient Comfort */}
